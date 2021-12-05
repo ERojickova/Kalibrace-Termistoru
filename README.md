@@ -1,3 +1,6 @@
-# Seebeckuv_jev
-Maturitní práce gym Nad Štolou
-v3
+# Seebeckuv jev
+Maturitní práce 
+Gymnázium Nad Štolou, Praha
+
+rok 2022
+
