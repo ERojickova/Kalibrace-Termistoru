@@ -1,3 +1,4 @@
+from inspect import indentsize
 from tkinter import *
 import random
 
@@ -20,6 +21,7 @@ cas_start = -1
 vypocet_bezi = False
 temperature = []
 voltage = []
+list_casu = []
 z_dataframu = False
 datafile = 'data.csv'
 df = pd.DataFrame()
@@ -38,19 +40,30 @@ def app():
     def readData():
         global temperature
         global voltage
+        global list_casu
+
         if z_dataframu:
-            pass
+            df2 = pd.read_csv(datafile)
+            temp = df2.at[0, 'Teplota']
+            volt = df2.at[0, 'Napětí']
+            cas = df2.at[0, 'Čas']
+            cas_f = datetime.datetime.strptime(cas, '%Y-%m-%d %H:%M:%S.%f')
+            df2 = df2.drop([0]).reset_index().drop(columns=['index'])
+            return cas_f, temp, volt
+
         else:
             # temp = read_temperature()
             # volt = read_volateg()
 
             temp = random.random()*10+10
             volt = random.random()*10+10
+            cas_ted = datetime.datetime.now()
 
             temperature.append(temp)
             voltage.append(volt)
+            list_casu.append(cas_ted)
 
-            return datetime.datetime.now(), temp, volt
+            return cas_ted, temp, volt
         
 
     # def readTemp():
@@ -115,6 +128,7 @@ def app():
         global df
         global temperature
         global voltage
+        global list_casu
         
         if vypocet_bezi:
             vypocet_bezi = False
@@ -124,14 +138,13 @@ def app():
 
             if os.path.exists(datafile):
                 os.remove(datafile)
-            data = {'Teplota':temperature, 'Napětí':voltage}
+            data = {'Čas': list_casu, 'Teplota':temperature, 'Napětí':voltage}
             df = pd.DataFrame(data)
             temperature = []
             voltage = []
+            list_casu = []
 
-
-
-            df.to_csv(datafile)
+            df.to_csv(datafile, index=False)
             y = df['Napětí'].values.reshape(-1, 1)
             x = df['Teplota'].values.reshape(-1, 1)
 
