@@ -23,6 +23,8 @@ temperature = []
 voltage = []
 list_casu = []
 z_dataframu = False
+pocet_dat = 0
+
 datafile = 'data.csv'
 df = pd.DataFrame()
 
@@ -32,8 +34,21 @@ def app():
 
 
     def onClick(boolean):
-        global z_dataframu 
+        global z_dataframu
+        global temp 
+        global volt
+        global cas_ted
+        global df2
+        global pocet_dat
+
         z_dataframu = boolean
+        temp = 0
+        volt = 0
+        cas_ted = 0
+        df2 = pd.read_csv(datafile)
+        pocet_dat = len(df2)
+
+
         zaciname()
         
 
@@ -41,15 +56,19 @@ def app():
         global temperature
         global voltage
         global list_casu
+        global temp 
+        global volt
+        global cas_ted
+        global df2
+        global pocet_dat
 
         if z_dataframu:
-            df2 = pd.read_csv(datafile)
             temp = df2.at[0, 'Teplota']
             volt = df2.at[0, 'Napětí']
             cas = df2.at[0, 'Čas']
-            cas_f = datetime.datetime.strptime(cas, '%Y-%m-%d %H:%M:%S.%f')
+            cas_ted = datetime.datetime.strptime(cas, '%Y-%m-%d %H:%M:%S.%f')
             df2 = df2.drop([0]).reset_index().drop(columns=['index'])
-            return cas_f, temp, volt
+            pocet_dat -= 1
 
         else:
             # temp = read_temperature()
@@ -63,7 +82,7 @@ def app():
             voltage.append(volt)
             list_casu.append(cas_ted)
 
-            return cas_ted, temp, volt
+        return cas_ted, temp, volt
         
 
     # def readTemp():
@@ -129,6 +148,12 @@ def app():
         global temperature
         global voltage
         global list_casu
+        global pocet_dat
+
+        if pocet_dat < 1:
+            vypocet_bezi = False
+        else:
+            vypocet_bezi = True
         
         if vypocet_bezi:
             vypocet_bezi = False
@@ -160,7 +185,8 @@ def app():
 
         else:
             cas_start = datetime.datetime.now() #skutecny cas, kdy zacinam kreslit
-            tlacitko.config(text = 'Stop')
+            tlacitko.config(text='Stop')
+            tlacitko2.config(text='Stop')
             vypocet_bezi = True
             ax1.cla()
             ax2.cla()
