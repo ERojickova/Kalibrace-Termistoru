@@ -12,9 +12,18 @@ import numpy as np
 from sklearn import linear_model
 from sklearn.linear_model import LinearRegression
 import os
+import platform
 
-#from napeti import read_voltage
-#from teplota import read_temperature
+
+"""
+Vyzkoušení zda program běží na Raspberry Pi či nikoli
+Při použití jiného Raspberry Pi je možná potřeba změnit název procesoru
+"""
+rpi = platform.uname()[4] == 'armv71'
+
+if rpi:
+    from napeti import read_voltage
+    from teplota import read_temperature
 
 
 cas_start = -1
@@ -27,6 +36,7 @@ z_dataframu = False
 
 datafile = os.path.join (os.path.dirname(os.path.abspath(__file__)), 'data.csv')
 df = pd.DataFrame()
+
 
 
 def app():
@@ -87,13 +97,14 @@ def app():
                 onClick(True)
 
         else:
-            # temp = read_temperature()
-            # volt = read_voltage()
-
-            # docasne reseni - generuji nahodna cisla
-            temp = random.random()*10+10
-            volt = random.random()*10+10
-            cas_ted = datetime.datetime.now()
+            if rpi:
+                temp = read_temperature()
+                volt = read_voltage()
+            else:
+                # generace náhodných čísel, pokud chceme data měřit ale nemáme senzory (respektive nejsme na rpi)
+                temp = random.random()*10+10
+                volt = random.random()*10+10
+                cas_ted = datetime.datetime.now()
 
 
         return cas_ted, temp, volt
