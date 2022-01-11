@@ -72,7 +72,7 @@ def app():
 
         else:
             # temp = read_temperature()
-            # volt = read_volateg()
+            # volt = read_voltage()
 
             temp = random.random()*10+10
             volt = random.random()*10+10
