@@ -19,7 +19,7 @@ import platform
 Vyzkoušení zda program běží na Raspberry Pi či nikoli
 Při použití jiného Raspberry Pi je možná potřeba změnit název procesoru
 """
-rpi = platform.uname()[4] == 'armv71'
+rpi = platform.uname()[4] == 'armv7l'
 
 if rpi:
     from napeti import read_voltage
@@ -40,7 +40,10 @@ df = pd.DataFrame()
 
 
 def app():
-    delka_kroku = 1 #s
+    if rpi:
+        delka_kroku = 10 #s
+    else:
+        delka_kroku = 1 #s
 
 
     def onClick(boolean):
@@ -104,7 +107,8 @@ def app():
                 # generace náhodných čísel, pokud chceme data měřit ale nemáme senzory (respektive nejsme na rpi)
                 temp = random.random()*10+10
                 volt = random.random()*10+10
-                cas_ted = datetime.datetime.now()
+                
+            cas_ted = datetime.datetime.now()
 
 
         return cas_ted, temp, volt
