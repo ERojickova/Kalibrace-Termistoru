@@ -1,4 +1,5 @@
 from inspect import indentsize
+from logging import log
 from tkinter import *
 import random
 
@@ -13,6 +14,7 @@ from sklearn import linear_model
 from sklearn.linear_model import LinearRegression
 import os
 import platform
+
 
 
 """
@@ -31,7 +33,13 @@ vypocet_bezi = False
 temperature = []
 voltage = []
 list_casu = []
+podil_teplot = []
+log_R = []
 z_dataframu = False
+
+oochrany_R = 10_000 #ohmů
+kelvin = 273.15 #K
+celkove_napeti = 3.3 #V
 # pocet_dat = 0
 
 datafile = os.path.join (os.path.dirname(os.path.abspath(__file__)), 'data.csv')
@@ -69,7 +77,7 @@ def app():
                 # pocet_dat = len(df2)
             else:
                 print (f'Nemam {datafile}, koncim')
-                text_seeb_koef.config(text='Soubor s daty nenalezen')
+                text_R.config(text='Soubor s daty nenalezen')
                 return
 
         zaciname()
@@ -105,8 +113,8 @@ def app():
                 volt = read_voltage()
             else:
                 # generace náhodných čísel, pokud chceme data měřit ale nemáme senzory (respektive nejsme na rpi)
-                temp = random.random()*10+10
-                volt = random.random()*10+10
+                temp = random.uniform(0, 50)
+                volt = random.uniform(0.1, 3.2)
                 
             cas_ted = datetime.datetime.now()
 
@@ -129,6 +137,9 @@ def app():
 
     def plotter():
         global cas_start
+        global kelvin
+        global oochrany_R
+        global celkove_napeti
 
 
         # Proměna do které se ukláda jestli je to první hodnota na nebo ne
@@ -139,9 +150,16 @@ def app():
             cas_full, teplota, napeti = readData()
 
             if cas_full != -1:
+                podelena_teplota = 1/(teplota + kelvin)
+                odpor = (napeti * oochrany_R)/(celkove_napeti - napeti)
+                log_odpor = np.log(odpor)
+
                 temperature.append(teplota)
                 voltage.append(napeti)
-                list_casu.append(cas_full)
+                list_casu.append(cas_full) 
+                podil_teplot.append(podelena_teplota)
+                log_R.append(log_odpor)
+                
 
 
 
@@ -156,12 +174,14 @@ def app():
                     cas_old_diff = 0
                     teplota_old = teplota
                     napeti_old = napeti
+                    podelena_teplota_old = podelena_teplota
+                    log_odpor_old = log_odpor
                     been = True
 
                 # Kreslení grafů
                 ax1.plot([cas_old_diff, cas_diff], [teplota_old, teplota], marker='o', color='orange', lw=1)
                 ax2.plot([cas_old_diff, cas_diff], [napeti_old, napeti], marker='x', color='forestgreen', lw=1)
-                ax3.plot([teplota_old, teplota], [napeti_old, napeti], marker='s', color='gold', lw=0)
+                ax3.plot([podelena_teplota_old, podelena_teplota], [log_odpor_old, log_odpor], marker='s', color='gold', lw=0)
 
 
                 # Přenastavení proměnných pro příští kreslení
@@ -186,6 +206,8 @@ def app():
         global temperature
         global voltage
         global list_casu
+        global podil_teplot
+        global log_R
         #global pocet_dat
 
         # zastav, kdyz dojdou hodnoty z csv souboru
@@ -204,11 +226,13 @@ def app():
             # if os.path.exists(datafile):
             #     os.remove(datafile)
 
-            data = {'Čas': list_casu, 'Teplota':temperature, 'Napětí':voltage}
+            data = {'Čas': list_casu, 'Teplota':temperature, 'Napětí':voltage, 'Podíl teplot':podil_teplot, 'Zlogaritmovaný odpor':log_R}
             df = pd.DataFrame(data)
             temperature = []
             voltage = []
             list_casu = []
+            podil_teplot = []
+            log_R = []
 
             if z_dataframu:
                 tlacitko.config(state="normal")  # obnovim tlacitko mereni
@@ -216,8 +240,8 @@ def app():
                 df.to_csv(datafile, index=False)
                 tlacitko2.config(state="normal")  # obnovim tlacitko ze souboru
 
-            y = df['Napětí'].values.reshape(-1, 1)
-            x = df['Teplota'].values.reshape(-1, 1)
+            y = df['Zlogaritmovaný odpor'].values.reshape(-1, 1)
+            x = df['Podíl teplot'].values.reshape(-1, 1)
 
             lm = linear_model.LinearRegression().fit(x, y)
             x2 = [min(x), max(x)] #Protože vím, že to bude přímka
@@ -225,8 +249,8 @@ def app():
 
             koef_R = lm.coef_
             koef_B = lm.intercept_
-            text_B.config(text=f'Seebecův koeficient: {round(koef_B.tolist()[0][0], 2)}')
-            text_R.config(text=f'Seebecův koeficient: {type(koef_B)}')       
+            text_R.config(text=f'Koeficient R: {round(koef_R.tolist()[0][0], 2)}')
+            text_B.config(text=f'Koeficient B: {round(koef_B.tolist()[0], 2)}')   
             ax3.plot(x2,y2, marker='o', lw=1, label='Lineární regrese', color="dodgerblue")
             ax3.legend()        
             graph.draw()
@@ -251,16 +275,16 @@ def app():
             ax2.cla()
             ax3.cla()
 
-            ax1.set_xlabel("cas (s)")
-            ax1.set_ylabel("teplota (°C)")
+            ax1.set_xlabel("čas [s]")
+            ax1.set_ylabel("teplota [°C]")
             ax1.grid()
 
-            ax2.set_xlabel("cas (s)")
-            ax2.set_ylabel("napětí (V)")
+            ax2.set_xlabel("čas [s]")
+            ax2.set_ylabel("napětí [V]")
             ax2.grid()
 
-            ax3.set_xlabel("rozdíl teplot(K)")
-            ax3.set_ylabel("napětí (V)")
+            ax3.set_xlabel("1/teplota [K]")
+            ax3.set_ylabel("ln(R) [ln(ohm)]")
             ax3.grid()
 
             threading.Thread(target=plotter).start()
@@ -279,26 +303,30 @@ def app():
     frame.pack()
 
     # Vytvoření nadpisu
-    nadpis = Label(frame, text="Seebecův jev", bg='white', font=("Ariel, 20"))
-    nadpis.grid(row=0, column=0, columnspan=3, pady=(20,0))
+    nadpis = Label(frame, text="Termistor", bg='white', font=("Ariel, 20"))
+    nadpis.grid(row=0, column=0, columnspan=4, pady=(20,0))
 
     
-    fig = Figure(figsize=(10,6))
+    fig = Figure(figsize=(9,6))
+    fig.subplots_adjust(hspace=0.4)
+
     ax1 = fig.add_subplot(311)
     ax2 = fig.add_subplot(312)
     ax3 = fig.add_subplot(313)
 
-    ax1.set_xlabel("čas (s)")
-    ax1.set_ylabel("teplota (°C)")
+
+    ax1.set_xlabel("čas [s]")
+    ax1.set_ylabel("teplota [°C]")
     ax1.grid()
-
-    ax2.set_xlabel("čas (s)")
-    ax2.set_ylabel("napětí (V)")
+    ax2.set_xlabel("čas [s]")
+    ax2.set_ylabel("napětí [V]")
     ax2.grid()
-
-    ax3.set_xlabel("rozdíl teplot(K)")
-    ax3.set_ylabel("napětí (V)")
+    ax3.set_xlabel("1/teplota [K]")
+    ax3.set_ylabel("ln(R) [ln(ohm)]")
     ax3.grid()
+    
+
+    
 
     graph = FigureCanvasTkAgg(fig, master=frame)
     graph.get_tk_widget().grid(row=1, column=0, columnspan=4)
@@ -310,12 +338,12 @@ def app():
 
 
     # Zobrazení koeficientu R nekonečno
-    text_R=Label(frame, text=u"Seebecův koeficient:", font=('Arial,  15'), bg='white')
+    text_R=Label(frame, text=u"Koeficient R:", font=('Arial,  15'), bg='white')
     text_R.grid(row=2, column=1, pady=(0,30))
     
     # Zobrazení koeficinetu B
-    text_B=Label(frame, text=u"Seebecův koeficient:", font=('Arial,  15'), bg='white')
-    text_B.grid(row=2, column=1, pady=(0,30))
+    text_B=Label(frame, text=u"Koeficient B:", font=('Arial,  15'), bg='white')
+    text_B.grid(row=2, column=2, pady=(0,30))
 
     # Tlačítko na zavření okna
     tlacitko2 = Button(frame, text='Start ze souboru', command=lambda: onClick(True), width=15, height=3, bg='darkturquoise', font=("Ariel, 12"))
