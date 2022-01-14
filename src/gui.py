@@ -41,7 +41,7 @@ df = pd.DataFrame()
 
 def app():
     if rpi:
-        delka_kroku = 10 #s
+        delka_kroku = 5 #s
     else:
         delka_kroku = 1 #s
 
@@ -223,8 +223,10 @@ def app():
             x2 = [min(x), max(x)] #Protože vím, že to bude přímka
             y2 = lm.predict(x2)
 
-            seebecuv_koeficient = lm.coef_
-            text_seeb_koef.config(text=f'Seebecův koeficient: {round(seebecuv_koeficient.tolist()[0][0], 2)}')       
+            koef_R = lm.coef_
+            koef_B = lm.intercept_
+            text_B.config(text=f'Seebecův koeficient: {round(koef_B.tolist()[0][0], 2)}')
+            text_R.config(text=f'Seebecův koeficient: {type(koef_B)}')       
             ax3.plot(x2,y2, marker='o', lw=1, label='Lineární regrese', color="dodgerblue")
             ax3.legend()        
             graph.draw()
@@ -233,7 +235,9 @@ def app():
             tlacitko.config(text='Stop')
             tlacitko2.config(text='Stop')
 
-            text_seeb_koef.config(text='Seebecův koeficient se počítá')
+            text_R.config(text='Koeficient R se počítá')
+            text_B.config(text='Koeficient B se počítá') 
+            
 
             if z_dataframu:
                 cas_start = df2.at[0, 'Čas']
@@ -297,7 +301,7 @@ def app():
     ax3.grid()
 
     graph = FigureCanvasTkAgg(fig, master=frame)
-    graph.get_tk_widget().grid(row=1, column=0, columnspan=3)
+    graph.get_tk_widget().grid(row=1, column=0, columnspan=4)
 
 
     # Tlačítko start/stop
@@ -305,13 +309,17 @@ def app():
     tlacitko.grid(row=2, column=0, pady=(0,30))
 
 
-    # Zobrazení seebecova koeficientu
-    text_seeb_koef=Label(frame, text=u"Seebecův koeficient:", font=('Arial,  15'), bg='white')
-    text_seeb_koef.grid(row=2, column=1, pady=(0,30))
+    # Zobrazení koeficientu R nekonečno
+    text_R=Label(frame, text=u"Seebecův koeficient:", font=('Arial,  15'), bg='white')
+    text_R.grid(row=2, column=1, pady=(0,30))
+    
+    # Zobrazení koeficinetu B
+    text_B=Label(frame, text=u"Seebecův koeficient:", font=('Arial,  15'), bg='white')
+    text_B.grid(row=2, column=1, pady=(0,30))
 
     # Tlačítko na zavření okna
     tlacitko2 = Button(frame, text='Start ze souboru', command=lambda: onClick(True), width=15, height=3, bg='darkturquoise', font=("Ariel, 12"))
-    tlacitko2.grid(row=2, column=2, pady=(0,30))
+    tlacitko2.grid(row=2, column=3, pady=(0,30))
 
     root.mainloop()
 
