@@ -30,12 +30,14 @@ if rpi:
 
 cas_start = -1
 vypocet_bezi = False
-temperature = []
-voltage = []
-list_casu = []
-podil_teplot = []
-log_R = []
 z_dataframu = False
+
+ls_temperature = []
+ls_voltage = []
+ls_time = []
+ls_log_R = []
+ls_temperature_ratio = []
+
 
 oochrany_R = 10_000 #ohmů
 kelvin = 273.15 #K
@@ -84,14 +86,8 @@ def app():
         
 
     def readData():
-        # global temperature
-        # global voltage
-        # global list_casu
-        # global temp
-        # global volt
-        # global cas_ted
         global df2
-        # global vypocet_bezi
+
 
         if z_dataframu:
             if len(df2) > 0:
@@ -120,20 +116,6 @@ def app():
 
 
         return cas_ted, temp, volt
-        
-
-    # def readTemp():
-    #     # temp = read_temperature()
-    #     temp = random.random()*10+10
-    #     temperature.append(temp)
-    #     return datetime.datetime.now(), temp
-
-    # def readVoltage():
-    #     # volt = read_volateg()
-    #     volt = random.random()*10+10
-    #     voltage.append(volt)
-    #     return datetime.datetime.now(), volt
-        
 
     def plotter():
         global cas_start
@@ -154,13 +136,12 @@ def app():
                 odpor = (napeti * oochrany_R)/(celkove_napeti - napeti)
                 log_odpor = np.log(odpor)
 
-                temperature.append(teplota)
-                voltage.append(napeti)
-                list_casu.append(cas_full) 
-                podil_teplot.append(podelena_teplota)
-                log_R.append(log_odpor)
+                ls_temperature.append(teplota)
+                ls_voltage.append(napeti)
+                ls_time.append(cas_full) 
+                ls_temperature_ratio.append(podelena_teplota)
+                ls_log_R.append(log_odpor)
                 
-
 
 
              # v readData se mohl zmenit stav vypocet_bezi
@@ -203,11 +184,11 @@ def app():
         global vypocet_bezi
         global datafile
         global df
-        global temperature
-        global voltage
-        global list_casu
-        global podil_teplot
-        global log_R
+        global ls_temperature
+        global ls_voltage
+        global ls_time
+        global ls_temperature_ratio
+        global ls_log_R
         #global pocet_dat
 
         # zastav, kdyz dojdou hodnoty z csv souboru
@@ -226,13 +207,14 @@ def app():
             # if os.path.exists(datafile):
             #     os.remove(datafile)
 
-            data = {'Čas': list_casu, 'Teplota':temperature, 'Napětí':voltage, 'Podíl teplot':podil_teplot, 'Zlogaritmovaný odpor':log_R}
+            data = {'Čas': ls_time, 'Teplota':ls_temperature, 'Napětí':ls_voltage, 'Podíl teplot':ls_temperature_ratio, 'Zlogaritmovaný odpor':ls_log_R}
             df = pd.DataFrame(data)
-            temperature = []
-            voltage = []
-            list_casu = []
-            podil_teplot = []
-            log_R = []
+
+            ls_temperature = []
+            ls_voltage = []
+            ls_time = []
+            ls_log_R = []
+            ls_temperature_ratio = []
 
             if z_dataframu:
                 tlacitko.config(state="normal")  # obnovim tlacitko mereni
