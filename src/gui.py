@@ -51,7 +51,7 @@ df = pd.DataFrame()
 
 def app():
     if rpi:
-        delka_kroku = 5 #s
+        delka_kroku = 30 #s
     else:
         delka_kroku = 1 #s
 
@@ -279,6 +279,7 @@ def app():
     root = Tk()
     root.config(background='white')
     root.geometry("1000x750")
+    root.title("Termistor")
 
     # Vytvoření rámečku pro lepší responsibilitu
     frame = LabelFrame(root, bg='white', borderwidth=0, highlightthickness=0)
