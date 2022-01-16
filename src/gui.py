@@ -229,10 +229,15 @@ def app():
             x2 = [min(x), max(x)] #Protože vím, že to bude přímka
             y2 = lm.predict(x2)
 
-            koef_R = lm.coef_
-            koef_B = lm.intercept_
-            text_R.config(text=f'Koeficient R: {round(koef_R.tolist()[0][0], 2)}')
-            text_B.config(text=f'Koeficient B: {round(koef_B.tolist()[0], 2)}')   
+
+            if lm.intercept_.tolist()[0] > 0:
+                koef_R = round(np.log(lm.intercept_.tolist()[0]), 2)
+            else: 
+                koef_R = "R je menší než 0"
+
+            koef_B = lm.coef_
+            text_R.config(text=f'Koeficient R: {koef_R}')
+            text_B.config(text=f'Koeficient B: {round(koef_B.tolist()[0][0], 2)}')   
             ax3.plot(x2,y2, marker='o', lw=1, label='Lineární regrese', color="dodgerblue")
             ax3.legend()        
             graph.draw()
