@@ -179,9 +179,12 @@ class GUI:
             koef_R = "R je menší než 0"
             #print(lm.intercept_.tolist()[0])
 
+        T = np.array([1/(25 + self.kelvin)])
+        log_R_25 = lm.predict(T)
+        koef_R_25 = round(np.exp(log_R_25), 2)
 
         koef_B = lm.coef_
-        self.text_R.config(text=f'Koeficient R: {koef_R}')
+        self.text_R.config(text=f'Koeficient R: {koef_R_25}')
         self.text_B.config(text=f'Koeficient B: {round(koef_B.tolist()[0][0], 2)}') 
 
         self.ax3.plot(x2,y2, marker='o', lw=1, label='Lineární regrese', color="dodgerblue")
