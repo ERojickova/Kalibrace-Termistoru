@@ -54,5 +54,3 @@ print(stime)
 print(type(stime))
 
 print(time == stime)
-
-
