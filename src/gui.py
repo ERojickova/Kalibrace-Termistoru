@@ -180,8 +180,8 @@ class GUI:
             #print(lm.intercept_.tolist()[0])
 
         T = np.array([1/(25 + self.kelvin)])
-        log_R_25 = lm.predict(T)
-        koef_R_25 = round(np.exp(log_R_25), 2)
+        log_R_25 = lm.predict(T.reshape(-1, 1))
+        koef_R_25 = round(np.exp(log_R_25[0][0]), 2)
 
         koef_B = lm.coef_
         self.text_R.config(text=f'Koeficient R: {koef_R_25}')
