@@ -51,7 +51,7 @@ class GUI:
 
             self.step_lenght = 30  # s
         else:
-            self.step_lenght = 1  # s
+            self.step_lenght = 0.2  # s
 
         # Připravení GUI pro zobrazování dat
         # Vytvoření a nastavení okna
@@ -130,10 +130,12 @@ class GUI:
         self.ax1.set_ylabel("teplota [°C]")
         self.ax1.grid()
 
+        self.ax2.cla()
         self.ax2.set_xlabel("čas [s]")
         self.ax2.set_ylabel("napětí [V]")
         self.ax2.grid()
 
+        self.ax3.cla()
         self.ax3.set_xlabel("1/teplota [K]")
         self.ax3.set_ylabel("ln(R) [ln(ohm)]")
         self.ax3.grid()
@@ -192,7 +194,7 @@ class GUI:
                 self.button2.config(state="disabled")
 
             self.RemakeAxis()
-            threading.Thread(target=self.Plotter).start
+            threading.Thread(target=self.Plotter).start()
 
 
     def MyLinearRegression(self):
@@ -224,17 +226,15 @@ class GUI:
             self.wait_till = datetime.datetime.now()+datetime.timedelta(seconds=self.step_lenght)
             self.ReadData()
             time_full = self.time_now
-            teplota = self.temp
-            napeti = self.volt
 
 
-            if self.time != -1:
-                self.inverted_temperature = 1/(teplota + self.kelvin)
-                self.resistance = (napeti * self.ballast_resist)/(self.total_volt * napeti)
+            if self.time_start != -1:
+                self.inverted_temperature = 1/(self.temp + self.kelvin)
+                self.resistance = (self.volt * self.ballast_resist)/(self.total_volt - self.volt)
                 self.log_resistance = np.log(self.resistance)
 
-                self.ls_temp.append(teplota)
-                self.ls_volt.append(napeti)
+                self.ls_temp.append(self.temp)
+                self.ls_volt.append(self.volt)
                 self.ls_time.append(time_full)
                 self.ls_inverted_temp.append(self.inverted_temperature)
                 self.ls_log_R.append(self.log_resistance)
@@ -248,19 +248,19 @@ class GUI:
                 else:
                     self.time_diff = 0
                     self.time_diff_old = 0
-                    self.temperature_old = teplota
-                    self.voltage_old = napeti
+                    self.temperature_old = self.temp
+                    self.voltage_old = self.volt
                     self.inverted_temperature_old = self.inverted_temperature
                     self.log_resistance_old = self.log_resistance
                     self.been = True
 
-                self.ax1.plot([self.time_diff_old, self.time_diff], [self.temperature_old, teplota], marker='o', color='orange', lw=1)
-                self.ax2.plot([self.time_diff_old, self.time_diff], [self.voltage_old, napeti], marker='x', color='forestgreen', lw=1)
+                self.ax1.plot([self.time_diff_old, self.time_diff], [self.temperature_old, self.temp], marker='o', color='orange', lw=1)
+                self.ax2.plot([self.time_diff_old, self.time_diff], [self.voltage_old, self.volt], marker='x', color='forestgreen', lw=1)
                 self.ax3.plot([self.inverted_temperature], [self.log_resistance], marker='s', color='gold',)
 
                 self.time_diff_old = self.time_diff
-                self.temperature_old = teplota
-                self.voltage_old = napeti
+                self.temperature_old = self.temp
+                self.voltage_old = self.volt
 
                 self.graph.draw()
             
@@ -271,11 +271,11 @@ class GUI:
     def ReadData(self):
         if self.from_df:
             if len(self.dataframe_read) > 0:
-                self.temp = self.datafile_read.at[0, 'Teplota']
-                self.volt = self.datafile_read.at[0, 'Napětí']
-                self.time_now = self.datafile_read.at[0, 'Čas']
+                self.temp = self.dataframe_read.at[0, 'Teplota']
+                self.volt = self.dataframe_read.at[0, 'Napětí']
+                self.time_now = self.dataframe_read.at[0, 'Čas']
 
-                self.datafile_read = self.datafile_read.drop([0]).reset_index().drop(columns=['index'])
+                self.dataframe_read = self.dataframe_read.drop([0]).reset_index().drop(columns=['index'])
             else:
                 self.temp = -1
                 self.volt = -1
