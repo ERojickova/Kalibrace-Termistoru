@@ -11,12 +11,15 @@ import pandas as pd
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 from sklearn import linear_model
-from sklearn.linear_model import LinearRegression
-
+#from sklearn.linear_model import LinearRegression
 
 
 class GUI:
     def __init__(self):
+        """
+        - Inicializace potředných vlastností
+        - Vytvoření GUI
+        """
         self.time_start = -1
         self.is_running = False
         self.from_df = False
@@ -93,6 +96,11 @@ class GUI:
         self.root.mainloop()
 
     def RemakeAxis(self):
+        """
+        --- Metoda znovu vytvoření os ---
+            - Smazání předchozího grafu v jednotlivých soustavách
+            - Znovu popsání os
+        """
         self.ax1.cla()
         self.ax1.set_xlabel("čas [s]")
         self.ax1.set_ylabel("teplota [°C]")
@@ -110,6 +118,11 @@ class GUI:
 
 
     def OnClick(self, boolean):
+        """
+        --- Metoda, která se spouští po zmáčknutí tlačítka ---
+            - Pokud je potředa načte data z csv souboru
+            - Zavolá metodu Execution()
+        """
         self.from_df = boolean
 
         if self.from_df and not self.is_running:
@@ -123,6 +136,23 @@ class GUI:
 
 
     def Execution(self):
+        """
+        --- Metoda provedení výpočtu ---
+            - Pomocí vlastnosti is_running zjistíme zda:
+                - Výpočet zastavujeme (is_running == True):
+                    - Změna is_running na False
+                    - Změna nápisu na tlačítkách
+                    - Uložení dat do souboru csv
+                    - Vyprázdnění listů na ukládání dat
+                    - Zavolání metody MyLinearRegresion()
+                - Výpočet spouštíme (is_running == False):
+                    - Změna is_running na False
+                    - Změna nápisu na tlačítkách
+                    - Změna textu u koeficientů --> "Počítá se"
+                    - Zavolání metody RemakeAxis()
+                    - Spuštění druhého vlákna s metodou Plotter()
+
+        """
         if self.is_running:
             self.is_running = False
 
@@ -166,6 +196,13 @@ class GUI:
 
 
     def MyLinearRegression(self):
+        """
+        --- Metoda pro lineární regresi ---
+            - Proložení posledního grafu přímkou
+            - Vypočítání koeficientů R_25 s B
+                - B = směrnice přímky
+                - R_25 = interpolovaný odpor pro teplotu 25 °C
+        """
         y = self.dataframe_write['Zlogaritmovaný odpor'].values.reshape(-1, 1)
         x = self.dataframe_write['Převrácená teplota'].values.reshape(-1, 1)
 
@@ -173,11 +210,6 @@ class GUI:
         x2 = [min(x), max(x)]  # Protože vím, že to bude přímka
         y2 = lm.predict(x2)
 
-        if lm.intercept_.tolist()[0] > 0:
-            koef_R = round(np.log(lm.intercept_.tolist()[0]), 2)
-        else: 
-            koef_R = "R je menší než 0"
-            #print(lm.intercept_.tolist()[0])
 
         T = np.array([1/(25 + self.kelvin)])
         log_R_25 = lm.predict(T.reshape(-1, 1))
@@ -192,6 +224,16 @@ class GUI:
         self.graph.draw()
 
     def Plotter(self):
+        """
+        --- Metoda pro kreselní grafů ---
+            - Zavolání metody ReadData() 
+            - Vypočítání dalších dat
+            - Uložení dat do listů (pro uložení dat do csv souboru na konci měření)
+            - Pro první bod (pomocí vlastnosti been) kreslíme jen jeden bod (respektive dva které ale leží na sobě)
+            - Pro další body kreslíme vždy nový bod a bod minulý a jejich spojnici
+            - Časová prodleva před dalším měřením
+        
+        """
         self.been = False
 
         while self.is_running:
@@ -212,7 +254,6 @@ class GUI:
                 self.ls_log_R.append(self.log_resistance)
         
 
-        #je potřeba vnější ifík??
             if self.is_running:
                 if self.been:
                     self.time_diff = time_full - self.time_start
@@ -241,6 +282,15 @@ class GUI:
                 
 
     def ReadData(self):
+        """
+        --- Metoda pro získávání dat ---
+            - Pokud beru data ze souboru:
+                - Načtení dat z prvního řádku dataframe_read
+                - Smazání prvního řádku
+            - Pokud data měřím:
+                    - Jsem na Raspberry Pi --> měření dat pomocí senzorů
+                    - Nejsem na Raspberry PI --> generování náhodných čísel v odpovídajícím intervalu 
+        """
         if self.from_df:
             if len(self.dataframe_read) > 0:
                 self.temperature = self.dataframe_read.at[0, 'Teplota']
@@ -264,8 +314,7 @@ class GUI:
             self.time_now = datetime.datetime.now()
         
 
+# Spuštení objektu GUI()
 if __name__ == '__main__':
     x = GUI()
-    
-        
 
