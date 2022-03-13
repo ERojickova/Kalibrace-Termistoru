@@ -36,5 +36,5 @@ def read_temperature():
         print('Nepodarilo se mi nacist spravne teplotu')
         return np.nan
             
-print(read_temperature()) 
+print(read_temperature())
     
