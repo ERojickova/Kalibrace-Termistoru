@@ -1,4 +1,4 @@
-# Seebeckuv jev
+# Kalibrace termistoru
 Maturitní práce 
 Gymnázium Nad Štolou, Praha
 
