@@ -25,7 +25,7 @@ def read_temperature():
         time.sleep(0.2)
         valid, temperature = read_temperature_raw()
         if counter > 100:
-            print('Nepodarilo se mi nacist spravne teplotu')
+            print('Nepodařilo se správně načíst teplotu')
             return np.nan
     pos = temp.index('t=')
     if pos != -1:
@@ -33,7 +33,7 @@ def read_temperature():
         temp_float = float(temp_str)/1000
         return temp_float
     else:
-        print('Nepodarilo se mi nacist spravne teplotu')
+        print('Nepodařilo se správně načíst teplotu')
         return np.nan
             
 print(read_temperature())
