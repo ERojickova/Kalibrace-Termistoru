@@ -23,7 +23,7 @@ def read_temperature():
     while 'YES' not in valid:
         counter += 1
         time.sleep(0.2)
-        valid, temperature = read_temperature_raw()
+        valid, temp = read_temperature_raw()
         if counter > 100:
             print('Nepodařilo se správně načíst teplotu')
             return np.nan

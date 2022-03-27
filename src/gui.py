@@ -16,6 +16,7 @@ from sklearn import linear_model
 class GUI:
     def __init__(self):
         """
+        ---Konstruktor---
         - Inicializace potředných vlastností
         - Vytvoření GUI
         """
@@ -110,7 +111,6 @@ class GUI:
         self.ax2.cla()
         self.ax2.set_xlabel("čas [s]")
         self.ax2.set_ylabel("napětí [V]")
-        self.ax2.grid()
 
         self.ax3.cla()
         self.ax3.set_xlabel("1/teplota [K]")
@@ -208,7 +208,7 @@ class GUI:
         x = self.dataframe_write['Převrácená teplota'].values.reshape(-1, 1)
 
         lm = linear_model.LinearRegression().fit(x, y)
-        x2 = [min(x), max(x)]  # Protože vím, že to bude přímka
+        x2 = [min(x), max(x)]
         y2 = lm.predict(x2)
 
         T_25 = 25 + self.kelvin
@@ -216,17 +216,9 @@ class GUI:
         log_R_25 = lm.predict(invert_T_25.reshape(-1, 1))
         koef_R_25 = round(np.exp(log_R_25[0][0]), 2)
 
-        # T_85 = 85 + self.kelvin
-        # invert_T_85 = np.array([1/(T_85)])
-        # log_R_85 = lm.predict(invert_T_85.reshape(-1, 1))
-        # koef_R_85 = koef_R_25 = round(np.exp(log_R_85[0][0]), 2)
-
-        # koef_B_v2 = round((T_25 * T_85) / (T_85  -T_25) * np.log(koef_R_25/koef_R_85), 2)
-
-
-        koef_B = lm.coef_
+        koef_B = round(lm.coef_.tolist()[0][0], 2)
         self.text_R.config(text=f'Koeficient R: {koef_R_25}')
-        self.text_B.config(text=f'Koeficient B: {round(koef_B.tolist()[0][0], 2)}') 
+        self.text_B.config(text=f'Koeficient B: {koef_B}') 
 
         self.ax3.plot(x2,y2, marker='o', lw=1, label='Lineární regrese', color="dodgerblue")
         self.ax3.legend()        
