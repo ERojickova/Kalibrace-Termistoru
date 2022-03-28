@@ -13,7 +13,7 @@ from matplotlib.figure import Figure
 from sklearn import linear_model
 
 
-class GUI:
+class Thermistor:
     def __init__(self):
         """
         ---Konstruktor---
@@ -44,7 +44,6 @@ class GUI:
             os.path.dirname(os.path.abspath(__file__)), "data-read.csv"
         )
 
-        #Data 3 jsou mnou upravená
 
         self.rpi = platform.uname()[4] == "armv7l"
 
@@ -316,7 +315,7 @@ class GUI:
             self.time_now = datetime.datetime.now()
         
 
-# Spuštení objektu GUI()
+# Spuštení objektu Thermistor()
 if __name__ == '__main__':
-    x = GUI()
+    x = Thermistor()
 
