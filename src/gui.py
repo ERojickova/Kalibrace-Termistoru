@@ -70,6 +70,7 @@ class Thermistor:
         self.heading = Label(self.frame, text="NTC Termistor", bg="white", font=("Ariel, 20"))
         self.heading.grid(row=0, column=0, columnspan=4, pady=(20, 0))        
 
+        # Vytvoření soustavy souřadnic na kreslení grafů
         self.fig = Figure(figsize=(9, 6))
         self.fig.subplots_adjust(hspace=0.4)
 
@@ -100,7 +101,7 @@ class Thermistor:
         """
         --- Metoda znovu vytvoření os ---
             - Smazání předchozího grafu v jednotlivých soustavách
-            - Znovu popsání os
+            - Znovu popsání os a vytvoření mřížky
         """
         self.ax1.cla()
         self.ax1.set_xlabel("čas [s]")
@@ -110,6 +111,7 @@ class Thermistor:
         self.ax2.cla()
         self.ax2.set_xlabel("čas [s]")
         self.ax2.set_ylabel("napětí [V]")
+        self.ax2.grid()
 
         self.ax3.cla()
         self.ax3.set_xlabel("1/teplota [K]")
