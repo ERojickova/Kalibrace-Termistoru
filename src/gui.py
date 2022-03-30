@@ -11,12 +11,12 @@ import pandas as pd
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 from sklearn import linear_model
-#from sklearn.linear_model import LinearRegression
 
 
-class GUI:
+class Thermistor:
     def __init__(self):
         """
+        ---Konstruktor---
         - Inicializace potředných vlastností
         - Vytvoření GUI
         """
@@ -25,7 +25,7 @@ class GUI:
         self.from_df = False
         self.temperature = -1
         self.voltage = -1
-        self.time_now = 0
+        self.time_now = -1
 
         self.ls_temp = []
         self.ls_volt = []
@@ -44,6 +44,7 @@ class GUI:
             os.path.dirname(os.path.abspath(__file__)), "data-read.csv"
         )
 
+
         self.rpi = platform.uname()[4] == "armv7l"
 
         if self.rpi:
@@ -52,23 +53,24 @@ class GUI:
 
             self.step_lenght = 30  # s
         else:
-            self.step_lenght = 0.2  # s
+            self.step_lenght = 0.01  # s
 
         # Připravení GUI pro zobrazování dat
         # Vytvoření a nastavení okna
         self.root = Tk()
         self.root.config(background="white")
         self.root.geometry("1000x750")
-        self.root.title("Termistor")
+        self.root.title("NTC Termistor")
 
         # Vytvoření rámečku pro lepší responsibilitu
         self.frame = LabelFrame(self.root, bg="white", borderwidth=0, highlightthickness=0)
         self.frame.pack()
 
         # Vytvoření nadpisu
-        self.heading = Label(self.frame, text="Termistor", bg="white", font=("Ariel, 20"))
+        self.heading = Label(self.frame, text="NTC Termistor", bg="white", font=("Ariel, 20"))
         self.heading.grid(row=0, column=0, columnspan=4, pady=(20, 0))        
 
+        # Vytvoření soustavy souřadnic na kreslení grafů
         self.fig = Figure(figsize=(9, 6))
         self.fig.subplots_adjust(hspace=0.4)
 
@@ -99,7 +101,7 @@ class GUI:
         """
         --- Metoda znovu vytvoření os ---
             - Smazání předchozího grafu v jednotlivých soustavách
-            - Znovu popsání os
+            - Znovu popsání os a vytvoření mřížky
         """
         self.ax1.cla()
         self.ax1.set_xlabel("čas [s]")
@@ -207,17 +209,17 @@ class GUI:
         x = self.dataframe_write['Převrácená teplota'].values.reshape(-1, 1)
 
         lm = linear_model.LinearRegression().fit(x, y)
-        x2 = [min(x), max(x)]  # Protože vím, že to bude přímka
+        x2 = [min(x), max(x)]
         y2 = lm.predict(x2)
 
-
-        T = np.array([1/(25 + self.kelvin)])
-        log_R_25 = lm.predict(T.reshape(-1, 1))
+        T_25 = 25 + self.kelvin
+        invert_T_25 = np.array([1/(T_25)])
+        log_R_25 = lm.predict(invert_T_25.reshape(-1, 1))
         koef_R_25 = round(np.exp(log_R_25[0][0]), 2)
 
-        koef_B = lm.coef_
+        koef_B = round(lm.coef_.tolist()[0][0], 2)
         self.text_R.config(text=f'Koeficient R: {koef_R_25}')
-        self.text_B.config(text=f'Koeficient B: {round(koef_B.tolist()[0][0], 2)}') 
+        self.text_B.config(text=f'Koeficient B: {koef_B}') 
 
         self.ax3.plot(x2,y2, marker='o', lw=1, label='Lineární regrese', color="dodgerblue")
         self.ax3.legend()        
@@ -239,24 +241,25 @@ class GUI:
         while self.is_running:
             self.wait_till = datetime.datetime.now()+datetime.timedelta(seconds=self.step_lenght)
             self.ReadData()
-            time_full = self.time_now
 
 
-            if self.time_start != -1:
+            if self.time_now != -1:
                 self.inverted_temperature = 1/(self.temperature + self.kelvin)
                 self.resistance = (self.voltage * self.ballast_resist)/(self.total_volt - self.voltage)
                 self.log_resistance = np.log(self.resistance)
+                if self.resistance <= 0:
+                    print(self.resistance)
 
                 self.ls_temp.append(self.temperature)
                 self.ls_volt.append(self.voltage)
-                self.ls_time.append(time_full)
+                self.ls_time.append(self.time_now)
                 self.ls_inverted_temp.append(self.inverted_temperature)
                 self.ls_log_R.append(self.log_resistance)
         
 
             if self.is_running:
                 if self.been:
-                    self.time_diff = time_full - self.time_start
+                    self.time_diff = self.time_now - self.time_start
                     self.time_diff = self.time_diff.total_seconds()
                 else:
                     self.time_diff = 0
@@ -314,7 +317,7 @@ class GUI:
             self.time_now = datetime.datetime.now()
         
 
-# Spuštení objektu GUI()
+# Spuštení objektu Thermistor()
 if __name__ == '__main__':
-    x = GUI()
+    x = Thermistor()
 
